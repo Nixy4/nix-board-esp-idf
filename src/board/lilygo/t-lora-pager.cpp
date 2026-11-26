@@ -505,6 +505,9 @@ bool LilyGoLoraPager::InitDisplay()
         return false;
     }
 
+    // 旋转 180°
+    lvgl_port.SetRotation(LV_DISPLAY_ROTATION_180);
+
     // 7. 以最大亮度打开背光
     SetDisplayBrightness(100);
 

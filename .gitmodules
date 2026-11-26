@@ -1,0 +1,3 @@
+[submodule "components/nix-wrapper-esp-idf"]
+	path = components/nix-wrapper-esp-idf
+	url = https://github.com/Nixy4/nix-wrapper-esp-idf

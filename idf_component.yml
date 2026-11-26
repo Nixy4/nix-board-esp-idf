@@ -1,5 +1,8 @@
 dependencies:
   idf: ">=5.5.4"
+  nix-wrapper-esp-idf:
+    git: https://github.com/Nixy4/nix-wrapper-esp-idf.git
+    version: v0.2.0
 repository: https://github.com/Nixy4/nix-board-esp-idf
 url: https://github.com/Nixy4/nix-board-esp-idf
 description: "nix-board-esp-idf board support package (BSP / 设备编排器)"

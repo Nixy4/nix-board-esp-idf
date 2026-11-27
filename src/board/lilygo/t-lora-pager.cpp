@@ -290,6 +290,7 @@ Logger l_pmu("LoraPager", "I2C", "BQ25896");
 Logger l_enc("LoraPager", "Encoder");
 Logger l_kbdrv("LoraPager", "Keyboard");
 Logger l_sd("LoraPager", "SPI", "SD");
+Logger l_boot("LoraPager", "BootButton");
 
 // =============================================================================
 // 设备 / 总线实例（文件作用域，只构造一次）
@@ -378,7 +379,7 @@ bool LilyGoLoraPager::InitBootButton()
     // 0. 初始化 GPIO0（BOOT 按钮）为输入，低电平触发软件关机
     if (gpio_config(&boot_button_gpio_cfg) != ESP_OK)
     {
-        ESP_LOGE("LoraPager", "Failed to configure boot button GPIO0.");
+        l_boot.Error("Failed to configure boot button GPIO0.");
         return false;
     }
 
@@ -387,21 +388,21 @@ bool LilyGoLoraPager::InitBootButton()
     s_boot_button_last_trigger_tick.store(0, std::memory_order_relaxed);
     s_boot_button_ignore_until_tick.store(
         static_cast<uint32_t>(now + kBootButtonStartupIgnoreTicks), std::memory_order_relaxed);
-    ESP_LOGI("LoraPager", "Boot button guard: startup_ignore=%lu ms, debounce=%lu ms",
-             static_cast<unsigned long>(pdTICKS_TO_MS(kBootButtonStartupIgnoreTicks)),
-             static_cast<unsigned long>(pdTICKS_TO_MS(kBootButtonDebounceTicks)));
+    l_boot.Info("Boot button guard: startup_ignore=%lu ms, debounce=%lu ms",
+                static_cast<unsigned long>(pdTICKS_TO_MS(kBootButtonStartupIgnoreTicks)),
+                static_cast<unsigned long>(pdTICKS_TO_MS(kBootButtonDebounceTicks)));
 
     esp_err_t ret = gpio_install_isr_service(0);
     if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE)
     {
-        ESP_LOGE("LoraPager", "Failed to install GPIO ISR service: %s", esp_err_to_name(ret));
+        l_boot.Error("Failed to install GPIO ISR service: %s", esp_err_to_name(ret));
         return false;
     }
 
     ret = gpio_isr_handler_add(GPIO_NUM_0, boot_button_isr_handler, this);
     if (ret != ESP_OK)
     {
-        ESP_LOGE("LoraPager", "Failed to add boot button ISR: %s", esp_err_to_name(ret));
+        l_boot.Error("Failed to add boot button ISR: %s", esp_err_to_name(ret));
         return false;
     }
 
@@ -672,11 +673,10 @@ void LilyGoLoraPager::BootButtonHandler()
         const uint32_t latency_ms =
             (trig_tick == 0) ? 0u : static_cast<uint32_t>(pdTICKS_TO_MS(now - trig_tick));
 
-        ESP_LOGE("LoraPager", "Boot button pressed, shutdown requested.");
-        ESP_LOGI("LoraPager",
-                 "Boot button event: trigger_tick=%lu, handle_tick=%lu, latency=%lu ms",
-                 static_cast<unsigned long>(trig_tick), static_cast<unsigned long>(now),
-                 static_cast<unsigned long>(latency_ms));
+        l_boot.Error("Boot button pressed, shutdown requested.");
+        l_boot.Info("Boot button event: trigger_tick=%lu, handle_tick=%lu, latency=%lu ms",
+                    static_cast<unsigned long>(trig_tick), static_cast<unsigned long>(now),
+                    static_cast<unsigned long>(latency_ms));
         GetPmu().Shutdown();
     }
 }
